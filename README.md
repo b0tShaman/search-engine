@@ -1,12 +1,12 @@
-# URL Downloader in Golang
+# Website-Copier in Golang
 
 ## Installation
 Ensure you have Go 1.23.5 installed on your system.
 
 Clone the repository:
 ```sh
-git clone https://github.com/yourusername/url-downloader.git
-cd url-downloader
+git clone https://github.com/b0tShaman/website-copier.git
+cd website-copier
 ```
 
 Install dependencies:
