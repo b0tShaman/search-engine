@@ -6,13 +6,13 @@ import (
 	"encoding/hex"
 	"os"
 	"sync"
-	"websiteCopier/logger"
+	log "websiteCopier/logger"
 )
 
 const (
 	RAND_BYTES_LENGTH = 8
 	PERMISSIONS       = 0644
-	OUTPUT_PATH		  = "./output/"
+	OUTPUT_PATH       = "./output/"
 )
 
 type Save interface {

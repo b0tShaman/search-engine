@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 	"time"
-	"websiteCopier/logger"
+	log "websiteCopier/logger"
 	"websiteCopier/metrics"
 )
 

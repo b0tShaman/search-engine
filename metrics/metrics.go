@@ -3,7 +3,7 @@ package metrics
 import (
 	"sync/atomic"
 	"time"
-	"websiteCopier/logger"
+	log "websiteCopier/logger"
 )
 
 type Metrics struct {
@@ -31,9 +31,9 @@ func (m *Metrics) LogMetrics() {
 	log.Infof("Failure count: %d", atomic.LoadInt64(&m.failureCount))
 
 	time_taken := m.totalTime
-	if m.successCount != 0{
-		time_taken = m.totalTime/m.successCount
+	if m.successCount != 0 {
+		time_taken = m.totalTime / m.successCount
 	}
-	
-	log.Infof("Average Download duration: %v secs",time.Duration(time_taken).Seconds() )
+
+	log.Infof("Average Download duration: %v secs", time.Duration(time_taken).Seconds())
 }
