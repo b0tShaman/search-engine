@@ -22,7 +22,7 @@ This project uses the following external dependencies:
 ### 1. Run the Program
 Build and run the Go program:
 ```sh
-go run main.go urls.txt
+go run main.go urls.csv
 ```
 
 ### 2. Output
