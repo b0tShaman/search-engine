@@ -1,7 +1,7 @@
 # Website-Copier in Golang
 
 ## Installation
-Ensure you have Go 1.23.5 installed on your system.
+Ensure you have Go 1.23 installed on your system.
 
 Clone the repository:
 ```sh
