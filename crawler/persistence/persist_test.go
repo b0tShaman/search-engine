@@ -11,12 +11,12 @@ import (
 func TestTextFileSaver_SaveToFile_Success(t *testing.T) {
 	saver := &TextFileSaver{}
 	ctx := context.Background()
-	resultChan := make(chan []byte, 2)
+	resultChan := make(chan Content, 2)
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	resultChan <- []byte("test data 1")
-	resultChan <- []byte("test data 2")
+	resultChan <- Content{URL: "http://test1",Payload: []byte("test data 1")}
+	resultChan <- Content{URL: "http://test2",Payload: []byte("test data 2")}
 	close(resultChan)
 
 	go saver.SaveToFile(ctx, resultChan, &wg)
@@ -43,7 +43,7 @@ func TestTextFileSaver_SaveToFile_Success(t *testing.T) {
 func TestTextFileSaver_SaveToFile_ContextCancelled(t *testing.T) {
 	saver := &TextFileSaver{}
 	ctx, cancel := context.WithCancel(context.Background())
-	resultChan := make(chan []byte, 2)
+	resultChan := make(chan Content, 2)
 	var wg sync.WaitGroup
 	wg.Add(1)
 
