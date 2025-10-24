@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
-	"websiteCopier/metrics"
+	"search_engine/crawler/metrics"
 )
 
 func TestHTTPDownloader_Download_Success(t *testing.T) {

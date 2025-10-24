@@ -3,7 +3,7 @@ package metrics
 import (
 	"sync/atomic"
 	"time"
-	log "websiteCopier/logger"
+	log "search_engine/crawler/logger"
 )
 
 type Metrics struct {

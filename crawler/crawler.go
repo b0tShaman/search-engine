@@ -7,11 +7,11 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	download "websiteCopier/downloader"
-	log "websiteCopier/logger"
-	"websiteCopier/metrics"
-	persist "websiteCopier/persistence"
-	read "websiteCopier/reader"
+	download "search_engine/crawler/downloader"
+	log "search_engine/crawler/logger"
+	"search_engine/crawler/metrics"
+	persist "search_engine/crawler/persistence"
+	read "search_engine/crawler/reader"
 )
 
 const (
@@ -26,7 +26,7 @@ func main() {
 
 	filePath := os.Args[1]
 	urlChan := make(chan string, MAX_ROUTINES) // buffered channel to prevent blocks
-	resultChan := make(chan []byte, MAX_ROUTINES)
+	resultChan := make(chan persist.Content, MAX_ROUTINES)
 	semaphore := make(chan struct{}, MAX_ROUTINES) // semaphore to limit max routines to 50
 	var mainWg sync.WaitGroup
 
@@ -35,7 +35,7 @@ func main() {
 	defer cancel()
 
 	reader := &read.CSVReader{}
-	persister := &persist.TextFileSaver{}
+	persister := &persist.InvertedIndex{}
 	metrics := &metrics.Metrics{}
 	downloader := &download.HTTPDownloader{Metrics: metrics}
 
