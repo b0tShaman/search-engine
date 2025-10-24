@@ -1,13 +1,12 @@
 package persist
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/gob"
 	"encoding/hex"
 	"os"
-	"path/filepath"
 	"regexp"
 	log "search_engine/crawler/logger"
 	"search_engine/crawler/metrics"
@@ -35,10 +34,10 @@ type InvertedIndex struct {
 }
 
 type Save interface {
-	SaveToFile(context.Context, chan Content, *sync.WaitGroup)
+	Persist(context.Context, chan Content, *sync.WaitGroup)
 }
 
-func (t *TextFileSaver) SaveToFile(ctx context.Context, input chan Content, wg *sync.WaitGroup) {
+func (t *TextFileSaver) Persist(ctx context.Context, input chan Content, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	// Create a directory to store output files
@@ -67,14 +66,16 @@ func (t *TextFileSaver) SaveToFile(ctx context.Context, input chan Content, wg *
 	}
 }
 
-func (t *InvertedIndex) SaveToFile(ctx context.Context, input chan Content, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (t *InvertedIndex) Persist(ctx context.Context, input chan Content, wg *sync.WaitGroup) {
+	indexes := make(map[string][]string)
+	defer func() {
+		file, _ := os.Create("index.gob")
+		defer file.Close()
+		gob.NewEncoder(file).Encode(indexes)
+
+		wg.Done()
+	}()
 	start := time.Now()
-	// Create a directory to store output files
-	if err := os.MkdirAll(OUTPUT_PATH, os.ModePerm); err != nil {
-		log.Error("Error creating output directory=", err)
-		return
-	}
 
 	wordRegex := regexp.MustCompile(`\b\w+\b`)
 	isAlpha := regexp.MustCompile(`^[a-zA-Z]+$`)
@@ -91,22 +92,10 @@ func (t *InvertedIndex) SaveToFile(ctx context.Context, input chan Content, wg *
 				if !isAlpha.MatchString(word) {
 					continue
 				}
-				wordFile := filepath.Join(OUTPUT_PATH, word+".txt")
-
-				// Open file in append mode, create if not exists
-				f, err := os.OpenFile(wordFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-				if err != nil {
-					t.Metrics.IncrementFailure()
-					continue
-				}
+				indexes[word] = append(indexes[word], c.URL)
 
 				t.Metrics.IncrementSuccess()
 				t.Metrics.AddTotalTime(time.Since(start))
-
-				writer := bufio.NewWriter(f)
-				writer.WriteString(c.URL + "\n")
-				writer.Flush()
-				f.Close()
 			}
 		}
 	}

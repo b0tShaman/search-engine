@@ -1,39 +1,59 @@
 package main
 
 import (
-	"bufio"
+	"encoding/gob"
 	"fmt"
 	"os"
-	"path/filepath"
+	"sort"
+)
+
+const (
+	MAX_RESULTS = 10
 )
 
 func main() {
-	// 1. Read input from user
+	// Load the inverted index from the file
+	var invertedIndex map[string][]string
+
+	file, _ := os.Open("index.gob")
+	defer file.Close()
+	gob.NewDecoder(file).Decode(&invertedIndex)
+
+	// Prompt user for input
 	var input string
 	fmt.Print("Enter search word: ")
 	fmt.Scanln(&input)
 
-	path := filepath.Join("output", input+".txt")
-	// 2. Open file with that name
-	file, err := os.Open(path)
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return
-	}
-	defer file.Close()
 	fmt.Println()
-	// 3. Read content and list URLs
-	urlSet := make(map[string]bool) // to remove duplicates
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		url := scanner.Text()
-		if !urlSet[url] {
-			fmt.Println("https://" + url)
-			urlSet[url] = true
+	// Retrieve and sort URLs based on frequency
+	urlSet := make(map[string]int)
+	for word, urls := range invertedIndex {
+		if word == input {
+			for _, url := range urls {
+				urlSet[url]++
+			}
+			break
 		}
 	}
-	fmt.Println()
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading file:", err)
+	// Convert map to slice of key-value pairs
+	type kv struct {
+		Key   string
+		Value int
+	}
+
+	var pairs []kv
+	for k, v := range urlSet {
+		pairs = append(pairs, kv{k, v})
+	}
+
+	sort.Slice(pairs, func(i, j int) bool {
+		return pairs[i].Value > pairs[j].Value
+	})
+	// Print sorted URLs with counts only top 10
+	for i, p := range pairs {
+		if i >= MAX_RESULTS {
+			break
+		}
+		fmt.Printf("https://%s -> %d\n", p.Key, p.Value)
 	}
 }

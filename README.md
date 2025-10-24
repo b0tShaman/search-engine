@@ -40,8 +40,6 @@ go run crawler/crawler.go urls.csv
 ```
 
 * `urls.csv` should contain the list of URLs to crawl.
-* Each word found in the crawled pages will have a corresponding file in the `output` directory.
-* The `output` directory will be created automatically if it does not exist.
 
 ### 2. Search for a Word
 

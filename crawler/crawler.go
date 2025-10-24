@@ -67,7 +67,7 @@ func main() {
 
 	mainWg.Add(1)
 	// Stage 3 - Persist contents.
-	go persister.SaveToFile(ctx, resultChan, &mainWg)
+	go persister.Persist(ctx, resultChan, &mainWg)
 
 	// Capture OS signals (Ctrl+C)
 	sigChan := make(chan os.Signal, 1)
