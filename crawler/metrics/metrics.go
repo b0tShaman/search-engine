@@ -1,13 +1,12 @@
 package metrics
 
 import (
-	log "search_engine/crawler/logger"
+	"fmt"
 	"sync/atomic"
 	"time"
 )
 
 type Metrics struct {
-	Name         string
 	successCount int64
 	failureCount int64
 	totalTime    int64
@@ -25,18 +24,18 @@ func (m *Metrics) AddTotalTime(duration time.Duration) {
 	atomic.AddInt64(&m.totalTime, int64(duration))
 }
 
-func (m *Metrics) LogMetrics() {
+func (m *Metrics) String() string {
 	totalProcessed := atomic.LoadInt64(&m.successCount) + atomic.LoadInt64(&m.failureCount)
-	log.Infof("[%s] Total processed: %d", m.Name, totalProcessed)
-	log.Infof("[%s] Success count: %d", m.Name, atomic.LoadInt64(&m.successCount))
-	log.Infof("[%s] Failure count: %d", m.Name, atomic.LoadInt64(&m.failureCount))
-
 	successCount := atomic.LoadInt64(&m.successCount)
+	failureCount := atomic.LoadInt64(&m.failureCount)
 	timeTaken := atomic.LoadInt64(&m.totalTime)
 	avgDuration := time.Duration(0)
 	if successCount != 0 {
 		avgDuration = time.Duration(timeTaken / successCount)
 	}
 
-	log.Infof("[%s] Average duration: %v secs", m.Name, avgDuration.Seconds())
+	return "Total processed: " + fmt.Sprintf("%d", totalProcessed) + "\n" +
+		"Success count: " + fmt.Sprintf("%d", successCount) + "\n" +
+		"Failure count: " + fmt.Sprintf("%d", failureCount) + "\n" +
+		"Average duration: " + fmt.Sprintf("%.2f secs", avgDuration.Seconds())
 }

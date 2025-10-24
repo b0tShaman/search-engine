@@ -36,10 +36,10 @@ func main() {
 
 	reader := &read.CSVReader{}
 
-	persistMetrics := &metrics.Metrics{Name: "Persist"}
+	persistMetrics := &metrics.Metrics{}
 	persister := &persist.InvertedIndex{Metrics: persistMetrics}
 
-	downloadMetrics := &metrics.Metrics{Name: "Download"}
+	downloadMetrics := &metrics.Metrics{}
 	downloader := &download.HTTPDownloader{Metrics: downloadMetrics}
 
 	// Stage 1 - Read File.
@@ -83,6 +83,6 @@ func main() {
 	}()
 
 	mainWg.Wait()
-	downloadMetrics.LogMetrics()
-	persistMetrics.LogMetrics()
+	log.Info("Download Metrics:\n", downloadMetrics.String())
+	log.Info("Persistence Metrics:\n", persistMetrics.String())
 }
