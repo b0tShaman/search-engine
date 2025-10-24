@@ -5,7 +5,7 @@ import (
 	"context"
 	"os"
 	"sync"
-	log "websiteCopier/logger"
+	log "search_engine/crawler/logger"
 )
 
 type URLReader interface {

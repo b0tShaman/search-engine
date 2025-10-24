@@ -1,44 +1,71 @@
-# Website-Copier in Golang
+# Search-Engine in Golang
+
+## Overview
+
+**Search-Engine** is a simple Go application to crawl websites from a CSV file, build an inverted index of words and search for URLs containing a particular word.
+
+The crawler generates inverted index files where each file is named after a word, and the content of the file contains URLs of websites that include that word. The results are saved in the `output` directory.
 
 ## Installation
-Ensure you have Go 1.23 installed on your system.
+
+Ensure you have **Go 1.23** installed on your system.
 
 Clone the repository:
+
 ```sh
-git clone https://github.com/b0tShaman/website-copier.git
-cd website-copier
+git clone https://github.com/b0tShaman/search-engine.git
+cd search-engine
 ```
 
 Install dependencies:
+
 ```sh
 go mod tidy
 ```
 
 ## Dependencies
+
 This project uses the following external dependencies:
-- [logrus](https://github.com/sirupsen/logrus): For structured logging.
+
+* [logrus](https://github.com/sirupsen/logrus): For structured logging.
 
 ## Usage
-### 1. Run the Program
-Build and run the Go program:
+
+### 1. Crawl Websites
+
+To crawl websites listed in a CSV file and build an inverted index:
+
 ```sh
-go run main.go urls.csv
+go run crawler/crawler.go ../urls.csv
 ```
 
-### 2. Output
-- Each downloaded webpage is saved as a separate `.txt` file with a random name in the `output` directory.
-- The `output` directory will be created automatically if it does not exist.
+* `urls.csv` should contain the list of URLs to crawl.
+* Each word found in the crawled pages will have a corresponding file in the `output` directory.
+* The `output` directory will be created automatically if it does not exist.
+
+### 2. Search for a Word
+
+To search for URLs containing a particular word:
+
+```sh
+go run search/search.go
+```
+
+* You will be prompted to **Enter search word**.
+* The program will display the list of URLs containing that word from the inverted index.
 
 ## Running Unit Tests
-To run the unit tests, use the following command:
+
+To run unit tests:
+
 ```sh
 go test ./...
 ```
-This will execute all tests within the project.
+
+This will execute all tests in the project.
 
 ## Assumptions and Design Decisions
-- The number of concurrent download goroutines is capped at **50** with 1 additional goroutine to control all 50.
-- The program dynamically adjusts the number of goroutines based on the number of URLs.
-- Graceful shutdown is implemented to allow the program to exit cleanly within 5 seconds when interrupted.
 
-
+* The inverted index is built with a file per word, containing all URLs where the word appears.
+* The program supports concurrent crawling with a cap on goroutines for efficiency.
+* Graceful shutdown is implemented to allow the program to exit cleanly when interrupted.

@@ -5,8 +5,9 @@ import (
 	"io"
 	"net/http"
 	"time"
-	log "websiteCopier/logger"
-	"websiteCopier/metrics"
+	log "search_engine/crawler/logger"
+	"search_engine/crawler/metrics"
+	persist "search_engine/crawler/persistence"
 )
 
 const (
@@ -21,7 +22,7 @@ type HTTPDownloader struct {
 	Metrics *metrics.Metrics
 }
 
-func (h *HTTPDownloader) Download(ctx context.Context, url string, resultChan chan []byte) {
+func (h *HTTPDownloader) Download(ctx context.Context, url string, resultChan chan persist.Content) {
 	start := time.Now()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, HTTP_PREFIX+url, nil)
 	if err != nil {
@@ -29,7 +30,7 @@ func (h *HTTPDownloader) Download(ctx context.Context, url string, resultChan ch
 		log.Error("http NewRequestWithContext failed for url=", url, " with error=", err)
 		return
 	}
-
+	req.Header.Set("User-Agent", "search_engine/crawler/1.0")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		h.Metrics.IncrementFailure()
@@ -48,5 +49,8 @@ func (h *HTTPDownloader) Download(ctx context.Context, url string, resultChan ch
 	h.Metrics.IncrementSuccess()
 	h.Metrics.AddTotalTime(time.Since(start))
 
-	resultChan <- content
+	resultChan <- persist.Content{
+		URL:     url,
+		Payload: content,
+	}
 }
