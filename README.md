@@ -36,7 +36,7 @@ This project uses the following external dependencies:
 To crawl websites listed in a CSV file and build an inverted index:
 
 ```sh
-go run crawler/crawler.go ../urls.csv
+go run crawler/crawler.go urls.csv
 ```
 
 * `urls.csv` should contain the list of URLs to crawl.
