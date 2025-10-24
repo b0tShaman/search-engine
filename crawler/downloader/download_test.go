@@ -4,9 +4,10 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"search_engine/crawler/metrics"
+	persist "search_engine/crawler/persistence"
 	"testing"
 	"time"
-	"search_engine/crawler/metrics"
 )
 
 func TestHTTPDownloader_Download_Success(t *testing.T) {
@@ -20,15 +21,15 @@ func TestHTTPDownloader_Download_Success(t *testing.T) {
 	metrics := &metrics.Metrics{}
 	downloader := &HTTPDownloader{Metrics: metrics}
 	ctx := context.Background()
-	resultChan := make(chan []byte, 1)
+	resultChan := make(chan persist.Content, 1)
 	url := ts.URL[len("http://"):]
 
 	downloader.Download(ctx, url, resultChan)
 
 	select {
 	case result := <-resultChan:
-		if string(result) != "this is a test response" {
-			t.Fatalf("Expected 'this is a test response', got '%s'", string(result))
+		if string(result.Payload) != "this is a test response" {
+			t.Fatalf("Expected 'this is a test response', got '%s'", string(result.Payload))
 		}
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting for download result")
@@ -46,15 +47,15 @@ func TestHTTPDownloader_Download_500_Response(t *testing.T) {
 	metrics := &metrics.Metrics{}
 	downloader := &HTTPDownloader{Metrics: metrics}
 	ctx := context.Background()
-	resultChan := make(chan []byte, 1)
+	resultChan := make(chan persist.Content, 1)
 	url := ts.URL[len("http://"):]
 
 	downloader.Download(ctx, url, resultChan)
 
 	select {
 	case result := <-resultChan:
-		if string(result) != "this is a error response" {
-			t.Fatalf("Expected 'this is a error response', got '%s'", string(result))
+		if string(result.Payload) != "this is a error response" {
+			t.Fatalf("Expected 'this is a error response', got '%s'", string(result.Payload))
 		}
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting for download result")
@@ -65,7 +66,7 @@ func TestHTTPDownloader_Download_Failure(t *testing.T) {
 	metrics := &metrics.Metrics{}
 	downloader := &HTTPDownloader{Metrics: metrics}
 	ctx := context.Background()
-	resultChan := make(chan []byte, 1)
+	resultChan := make(chan persist.Content, 1)
 
 	downloader.Download(ctx, "invalid-url", resultChan)
 	select {
@@ -89,7 +90,7 @@ func TestHTTPDownloader_Download_Timeout(t *testing.T) {
 	downloader := &HTTPDownloader{Metrics: metrics}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
 	defer cancel()
-	resultChan := make(chan []byte, 1)
+	resultChan := make(chan persist.Content, 1)
 
 	downloader.Download(ctx, ts.URL[len("http://"):], resultChan)
 	select {
