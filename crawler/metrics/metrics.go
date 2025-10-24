@@ -1,12 +1,13 @@
 package metrics
 
 import (
+	log "search_engine/crawler/logger"
 	"sync/atomic"
 	"time"
-	log "search_engine/crawler/logger"
 )
 
 type Metrics struct {
+	Name         string
 	successCount int64
 	failureCount int64
 	totalTime    int64
@@ -26,14 +27,16 @@ func (m *Metrics) AddTotalTime(duration time.Duration) {
 
 func (m *Metrics) LogMetrics() {
 	totalProcessed := atomic.LoadInt64(&m.successCount) + atomic.LoadInt64(&m.failureCount)
-	log.Infof("Total URLs processed: %d", totalProcessed)
-	log.Infof("Success count: %d", atomic.LoadInt64(&m.successCount))
-	log.Infof("Failure count: %d", atomic.LoadInt64(&m.failureCount))
+	log.Infof("[%s] Total processed: %d", m.Name, totalProcessed)
+	log.Infof("[%s] Success count: %d", m.Name, atomic.LoadInt64(&m.successCount))
+	log.Infof("[%s] Failure count: %d", m.Name, atomic.LoadInt64(&m.failureCount))
 
-	time_taken := m.totalTime
-	if m.successCount != 0 {
-		time_taken = m.totalTime / m.successCount
+	successCount := atomic.LoadInt64(&m.successCount)
+	timeTaken := atomic.LoadInt64(&m.totalTime)
+	avgDuration := time.Duration(0)
+	if successCount != 0 {
+		avgDuration = time.Duration(timeTaken / successCount)
 	}
 
-	log.Infof("Average Download duration: %v secs", time.Duration(time_taken).Seconds())
+	log.Infof("[%s] Average duration: %v secs", m.Name, avgDuration.Seconds())
 }

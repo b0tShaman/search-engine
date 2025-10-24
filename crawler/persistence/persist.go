@@ -9,9 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	log "search_engine/crawler/logger"
+	"search_engine/crawler/metrics"
 	"strings"
 	"sync"
-	log "search_engine/crawler/logger"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -28,7 +30,9 @@ type Content struct {
 }
 
 type TextFileSaver struct{}
-type InvertedIndex struct{}
+type InvertedIndex struct {
+	Metrics *metrics.Metrics
+}
 
 type Save interface {
 	SaveToFile(context.Context, chan Content, *sync.WaitGroup)
@@ -63,7 +67,58 @@ func (t *TextFileSaver) SaveToFile(ctx context.Context, input chan Content, wg *
 	}
 }
 
-func ExtractText(htmlContent []byte) string {
+func (t *InvertedIndex) SaveToFile(ctx context.Context, input chan Content, wg *sync.WaitGroup) {
+	defer wg.Done()
+	start := time.Now()
+	// Create a directory to store output files
+	if err := os.MkdirAll(OUTPUT_PATH, os.ModePerm); err != nil {
+		log.Error("Error creating output directory=", err)
+		return
+	}
+
+	wordRegex := regexp.MustCompile(`\b\w+\b`)
+	isAlpha := regexp.MustCompile(`^[a-zA-Z]+$`)
+
+	for c := range input {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			text := extractText(c.Payload)
+			words := wordRegex.FindAllString(strings.ToLower(text), -1)
+
+			for _, word := range words {
+				if !isAlpha.MatchString(word) {
+					continue
+				}
+				wordFile := filepath.Join(OUTPUT_PATH, word+".txt")
+
+				// Open file in append mode, create if not exists
+				f, err := os.OpenFile(wordFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+				if err != nil {
+					t.Metrics.IncrementFailure()
+					continue
+				}
+
+				t.Metrics.IncrementSuccess()
+				t.Metrics.AddTotalTime(time.Since(start))
+
+				writer := bufio.NewWriter(f)
+				writer.WriteString(c.URL + "\n")
+				writer.Flush()
+				f.Close()
+			}
+		}
+	}
+}
+
+func (t *TextFileSaver) generateRandomFilename() string {
+	randBytes := make([]byte, RAND_BYTES_LENGTH)
+	rand.Read(randBytes)
+	return hex.EncodeToString(randBytes) + ".txt"
+}
+
+func extractText(htmlContent []byte) string {
 	doc, err := html.Parse(bytes.NewReader(htmlContent))
 	if err != nil {
 		return ""
@@ -87,52 +142,4 @@ func ExtractText(htmlContent []byte) string {
 	}
 	f(doc)
 	return buf.String()
-}
-
-func (t *InvertedIndex) SaveToFile(ctx context.Context, input chan Content, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	// Create a directory to store output files
-	if err := os.MkdirAll(OUTPUT_PATH, os.ModePerm); err != nil {
-		log.Error("Error creating output directory=", err)
-		return
-	}
-
-	wordRegex := regexp.MustCompile(`\b\w+\b`)
-	isAlpha := regexp.MustCompile(`^[a-zA-Z]+$`)
-
-	for c := range input {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			text := ExtractText(c.Payload)
-			words := wordRegex.FindAllString(strings.ToLower(text), -1)
-
-			for _, word := range words {
-				if !isAlpha.MatchString(word) {
-					continue
-				}
-				wordFile := filepath.Join(OUTPUT_PATH, word+".txt")
-
-				// Open file in append mode, create if not exists
-				f, err := os.OpenFile(wordFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-				if err != nil {
-					// log error and continue
-					continue
-				}
-
-				writer := bufio.NewWriter(f)
-				writer.WriteString(c.URL + "\n")
-				writer.Flush()
-				f.Close()
-			}
-		}
-	}
-}
-
-func (t *TextFileSaver) generateRandomFilename() string {
-	randBytes := make([]byte, RAND_BYTES_LENGTH)
-	rand.Read(randBytes)
-	return hex.EncodeToString(randBytes) + ".txt"
 }

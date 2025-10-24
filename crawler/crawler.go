@@ -4,18 +4,18 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 	download "search_engine/crawler/downloader"
 	log "search_engine/crawler/logger"
 	"search_engine/crawler/metrics"
 	persist "search_engine/crawler/persistence"
 	read "search_engine/crawler/reader"
+	"sync"
+	"syscall"
+	"time"
 )
 
 const (
-	MAX_ROUTINES = 50
+	MAX_ROUTINES = 200
 )
 
 func main() {
@@ -35,9 +35,12 @@ func main() {
 	defer cancel()
 
 	reader := &read.CSVReader{}
-	persister := &persist.InvertedIndex{}
-	metrics := &metrics.Metrics{}
-	downloader := &download.HTTPDownloader{Metrics: metrics}
+
+	persistMetrics := &metrics.Metrics{Name: "Persist"}
+	persister := &persist.InvertedIndex{Metrics: persistMetrics}
+
+	downloadMetrics := &metrics.Metrics{Name: "Download"}
+	downloader := &download.HTTPDownloader{Metrics: downloadMetrics}
 
 	// Stage 1 - Read File.
 	mainWg.Add(1)
@@ -80,5 +83,6 @@ func main() {
 	}()
 
 	mainWg.Wait()
-	metrics.LogMetrics()
+	downloadMetrics.LogMetrics()
+	persistMetrics.LogMetrics()
 }
