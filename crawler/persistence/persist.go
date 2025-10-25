@@ -67,7 +67,7 @@ func (t *TextFileSaver) Persist(ctx context.Context, input chan Content, wg *syn
 }
 
 func (t *InvertedIndex) Persist(ctx context.Context, input chan Content, wg *sync.WaitGroup) {
-	indexes := make(map[string][]string)
+	indexes := make(map[string]map[string]int)
 	defer func() {
 		file, _ := os.Create("index.gob")
 		defer file.Close()
@@ -92,7 +92,10 @@ func (t *InvertedIndex) Persist(ctx context.Context, input chan Content, wg *syn
 				if !isAlpha.MatchString(word) {
 					continue
 				}
-				indexes[word] = append(indexes[word], c.URL)
+				if _, ok := indexes[word]; !ok {
+					indexes[word] = make(map[string]int)
+				}
+				indexes[word][c.URL]++
 
 				t.Metrics.IncrementSuccess()
 				t.Metrics.AddTotalTime(time.Since(start))

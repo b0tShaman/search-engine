@@ -13,7 +13,7 @@ const (
 
 func main() {
 	// Load the inverted index from the file
-	var invertedIndex map[string][]string
+	var invertedIndex map[string]map[string]int
 
 	file, _ := os.Open("index.gob")
 	defer file.Close()
@@ -26,14 +26,10 @@ func main() {
 
 	fmt.Println()
 	// Retrieve and sort URLs based on frequency
-	urlSet := make(map[string]int)
-	for word, urls := range invertedIndex {
-		if word == input {
-			for _, url := range urls {
-				urlSet[url]++
-			}
-			break
-		}
+	urlSet, exists := invertedIndex[input]
+	if !exists {
+		fmt.Println("No results found for the given word.")
+		return
 	}
 	// Convert map to slice of key-value pairs
 	type kv struct {

@@ -19,7 +19,7 @@ func TestTextFileSaver_SaveToFile_Success(t *testing.T) {
 	resultChan <- Content{URL: "http://test2",Payload: []byte("test data 2")}
 	close(resultChan)
 
-	go saver.SaveToFile(ctx, resultChan, &wg)
+	go saver.Persist(ctx, resultChan, &wg)
 	wg.Wait()
 
 	files, err := os.ReadDir(OUTPUT_PATH)
@@ -47,7 +47,7 @@ func TestTextFileSaver_SaveToFile_ContextCancelled(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go saver.SaveToFile(ctx, resultChan, &wg)
+	go saver.Persist(ctx, resultChan, &wg)
 
 	time.Sleep(100 * time.Millisecond)
 	cancel()
