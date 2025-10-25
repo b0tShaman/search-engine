@@ -4,8 +4,6 @@
 
 **Search-Engine** is a simple Go application to crawl websites from a CSV file, build an inverted index of words and search for URLs containing a particular word.
 
-The crawler generates inverted index files where each file is named after a word, and the content of the file contains URLs of websites that include that word. The results are saved in the `output` directory.
-
 ## Installation
 
 Ensure you have **Go 1.23** installed on your system.
@@ -64,6 +62,6 @@ This will execute all tests in the project.
 
 ## Assumptions and Design Decisions
 
-* The inverted index is built with a file per word, containing all URLs where the word appears.
+* The inverted index is stored as a map[string][]string and persisted using Go's gob encoder for fast serialization and deserialization.
 * The program supports concurrent crawling with a cap on goroutines for efficiency.
 * Graceful shutdown is implemented to allow the program to exit cleanly when interrupted.
