@@ -62,6 +62,6 @@ This will execute all tests in the project.
 
 ## Assumptions and Design Decisions
 
-* The inverted index is stored as a map[string][]string and persisted using Go's gob encoder for fast serialization and deserialization.
+* The inverted index is stored as a map[string]map[string]int and persisted using Go's gob encoder for fast serialization and deserialization.
 * The program supports concurrent crawling with a cap on goroutines for efficiency.
 * Graceful shutdown is implemented to allow the program to exit cleanly when interrupted.
